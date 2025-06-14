@@ -7,7 +7,7 @@ This repository contains the testing code for evaluating retriever models on the
 ![cover](cover.png)
 
 ## Data Download
-The PDF image data will be available at hugging face. 
+The PDF image data will be available at hugging face. <br />
 QA pairs are provided in the [QA](https://github.com/puar-playground/VisR-Bench/tree/main/QA) folder of this repo.
 
 
