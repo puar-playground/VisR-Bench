@@ -1,6 +1,8 @@
 # VisR-Bench
 
-VisR-Bench: A Multilingual Visual Retrieval Benchmark for Long Documents <br />
+VisR-Bench: A Multilingual Visual Retrieval Benchmark for Long Documents<br />
+This repository contains the testing code for evaluating retriever models on the VisR-Bench benchmark.
+<br />
 
 ![cover](cover.png)
 
