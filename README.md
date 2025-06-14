@@ -3,11 +3,11 @@
 VisR-Bench: A Multilingual Visual Retrieval Benchmark for Long Documents
 
 This repository contains the testing code for evaluating retriever models on the VisR-Bench benchmark.
-
+![cover](cover.png)
 
 ## Data Download
 The PDF image data will be available at hugging face. 
-QA pairs are provided in the `QA` folder of this repo.
+QA pairs are provided in the [QA](https://github.com/puar-playground/VisR-Bench/tree/main/QA) folder of this repo.
 
 
 ## Run Test
