@@ -1,6 +1,7 @@
 # VisR-Bench
 
-VisR-Bench: A Multilingual Visual Retrieval Benchmark for Long Documents
+VisR-Bench: A Multilingual Visual Retrieval Benchmark for Long Documents <br />
+
 ![cover](cover.png)
 
 ## Data Download
