@@ -7,13 +7,19 @@ This repository contains the testing code for evaluating retriever models on the
 ![cover](cover.png)
 
 ## Data Download
-The PDF image data will be available at hugging face. <br />
+The document page images are available in the HuggingFace repository: [puar-playground/VisR-Bench](https://huggingface.co/datasets/puar-playground/VisR-Bench).
+```
+git lfs install
+git clone https://huggingface.co/datasets/puar-playground/VisR-Bench
+```
+The code above will download the `VisR-Bench` folder, which is required for testing retrieval performance.
+
 QA pairs are provided in the [QA](https://github.com/puar-playground/VisR-Bench/tree/main/QA) folder of this repo.
 
 
 ## Run Test
 ```
-python run_test.py --retriever ColPali --type figure --work_dir . --data_dir ./data
+python run_test.py --retriever ColPali --type figure --work_dir .
 ```
 
 The `retriever` flag determine a retriever model from 
@@ -24,7 +30,7 @@ The `type` flag determine the type of QA in
 ```
 ['figure', 'table', 'text', 'multilingual']
 ```
-`work_dir` and `data_dir` specifies the dir to the code folder and the folder saving the pdf images.
+`work_dir` specifies the dir to the code folder.
 
 
 ## Reference

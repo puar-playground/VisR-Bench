@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
         assert len(qa['all_page_images']) == len(qa['all_page_md_str'])
 
-        image_list = [os.path.join(args.work_dir, 'data', file_name, x) for x in qa['all_page_images']]
+        image_list = [os.path.join(args.work_dir, 'VisR-Bench', file_name, x) for x in qa['all_page_images']]
 
         if retriever.multimodel:
             _, indicies = retriever.retrieve(query_list=question_list, image_list=image_list)
