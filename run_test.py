@@ -21,8 +21,6 @@ parser.add_argument("--retriever", default='BM25',
                     type=str)
 parser.add_argument("--type", default='multilingual', choices=['figure', 'table', 'text', 'multilingual'], help="QA type", type=str)
 parser.add_argument("--work_dir", default='./', help="/path/to/code/folder", type=str)
-parser.add_argument("--start", type=int, help="start")
-parser.add_argument("--end", type=int, help="end")
 args = parser.parse_args()
 
 
@@ -67,9 +65,7 @@ if __name__ == "__main__":
 
     acc_all = []
 
-    start = args.start
-    end = min(args.end, len(qa_data))
-    pbar = tqdm(qa_data[start:end])
+    pbar = tqdm(qa_data)
 
     results = []
     for qa in pbar:
@@ -98,6 +94,11 @@ if __name__ == "__main__":
         qa['indicies'] = indicies
         results.append(qa.copy())
 
-        json.dump(results, open(os.path.join(args.work_dir, f'results/{args.retriever}_{args.type}_{start}.json'), 'w'), indent=2)
+    
+    if not os.path.exists(os.path.join(args.work_dir, 'results')):
+        os.makedirs(os.path.join(args.work_dir, 'results'))
+        print(f"Result folder created: {os.path.join(args.work_dir, 'results')}")
+
+    json.dump(results, open(os.path.join(args.work_dir, f'results/{args.retriever}_{args.type}.json'), 'w'), indent=2)
 
     acc = compute_top_k_accuracy(results, k_list=[1, 5])
