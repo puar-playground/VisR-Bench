@@ -6,6 +6,11 @@ This repository contains the testing code for evaluating retriever models on the
 
 ![cover](cover.png)
 
+## Install
+```
+pip install -r requirements.txt
+```
+
 ## Data Download
 The document page images are available in the HuggingFace repository: [puar-playground/VisR-Bench](https://huggingface.co/datasets/puar-playground/VisR-Bench).
 ```
