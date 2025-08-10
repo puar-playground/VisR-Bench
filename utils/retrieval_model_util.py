@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 # for clip model imports
 import clip
 # for siglip, NV-embed model imports
-from utils.nvembed.modeling_nvembed import NVEmbedModel
+from .nvembed.modeling_nvembed import NVEmbedModel
 from transformers import AutoProcessor, AutoModel, AutoTokenizer
 # for BM25 imports
 from rank_bm25 import BM25Okapi
@@ -91,7 +91,7 @@ class BaseRetriever(ABC):
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-from colpali_engine.models import ColPali, ColPaliProcessor
+from colpali_engine.models import ColPali, ColPaliProcessor, ColQwen2, ColQwen2Processor
 
 class ColPaliRetriever(BaseRetriever):
     """Retriever class using ColPali for multimodal retrieval."""
@@ -178,6 +178,116 @@ class ColPaliRetriever(BaseRetriever):
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+class ColQwenRetriever(BaseRetriever):
+    """Retriever class using ColQwen2 for multimodal retrieval."""
+
+    def __init__(self, model_name: str = "vidore/colqwen2-v0.1", device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+        """
+        Initializes the ColQwen2 model.
+
+        Args:
+            model_name (str): HF model id (e.g., "vidore/colqwen2-v1").
+            device (str): 'cuda' or 'cpu'.
+        """
+        # keep your pattern; ideally pin outside the codebase
+        os.system('pip install transformers==4.47.1')
+
+        self.multimodel = True
+        self.device = device
+
+        # Load model + processor
+        self.model = ColQwen2.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="cuda:0" if device.startswith("cuda") else device
+        ).eval()
+        self.processor = ColQwen2Processor.from_pretrained(model_name)
+
+    @staticmethod
+    def pad_and_cat_tensors(tensor_list):
+        # Find the maximum length of the second dimension (x_i) across all tensors
+        max_x = max(tensor.size(1) for tensor in tensor_list)
+        
+        # Pad tensors to have the same size in the second dimension
+        padded_tensors = []
+        for tensor in tensor_list:
+            padding_size = max_x - tensor.size(1)
+            # Pad with zeros on the right in the second dimension
+            padded_tensor = torch.nn.functional.pad(tensor, (0, 0, 0, padding_size))
+            padded_tensors.append(padded_tensor)
+        
+        # Concatenate the padded tensors along the first dimension
+        result_tensor = torch.cat(padded_tensors, dim=0)
+        
+        return result_tensor
+
+    def process_text(self, query_list: List[str], batch_size: int = 2):
+        """
+        Processes a list of text queries into embeddings using ColPhi in batches.
+
+        Args:
+            query_list (List[str]): List of query texts.
+            batch_size (int): Number of queries processed per batch.
+
+        Returns:
+            torch.Tensor: Concatenated embeddings for all queries.
+        """
+        all_embeddings = []
+
+        for i in range(0, len(query_list), batch_size):
+            batch_queries = query_list[i : i + batch_size]
+
+            # Convert queries to model-compatible format
+            batch_inputs = self.processor.process_queries(batch_queries).to(self.model.device)
+
+            with torch.no_grad():
+                batch_embeddings = self.model(**batch_inputs)
+
+            all_embeddings.append(batch_embeddings.to("cpu"))
+        
+        # Concatenate all processed batches into a single tensor
+        all_embeddings = self.pad_and_cat_tensors(all_embeddings)
+
+        # Concatenate all batch outputs into a single tensor
+        return all_embeddings
+
+    def process_image(self, image_dir_list: List[str]):
+        """Processes images into embeddings using ColQwen2."""
+
+        def process_images_in_batches(processor, img_dir_list, model, batch_size: int = 2):
+            all_embeddings = []
+            for i in range(0, len(img_dir_list), batch_size):
+                batch_img_dirs = img_dir_list[i:i + batch_size]
+                images = [Image.open(p).convert("RGB") for p in batch_img_dirs]
+
+                features = processor.process_images(images)      # BatchFeature (dict[str, Tensor])
+                features = {k: v.to(model.device) for k, v in features.items()}
+
+                with torch.no_grad():
+                    emb = model(**features)                     # tensor [B, D] or [B, M, D]
+                all_embeddings.append(emb.to("cpu"))
+
+            return self.pad_and_cat_tensors(all_embeddings)
+
+        image_embeddings = process_images_in_batches(self.processor, image_dir_list, self.model)
+        return image_embeddings
+
+    def compute_similarity(self, text_embeddings, image_embeddings):
+        """Computes cosine similarity between text and image embeddings."""
+        scores = self.processor.score_multi_vector(text_embeddings, image_embeddings)
+        return scores
+
+    def retrieve(self, query_list: List[str], image_list: List[str]):
+        text_embeddings = self.process_text(query_list)
+        image_embeddings = self.process_image(image_list)
+
+        similarity_score = self.compute_similarity(text_embeddings, image_embeddings)
+        values, top_indices = torch.as_tensor(similarity_score).sort(descending=True)
+        return values, top_indices
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 from colpali_engine.models import ColPhi, ColPhiProcessor
 
 class ColPhiRetriever(BaseRetriever):
@@ -216,7 +326,7 @@ class ColPhiRetriever(BaseRetriever):
             padded_tensors.append(padded_tensor)
         
         # Concatenate the padded tensors along the first dimension
-        result_tensor = torch.cat(padded_tensors, dim=0)
+        result_tensor = torch.cat(padded_tensors)
         
         return result_tensor
     

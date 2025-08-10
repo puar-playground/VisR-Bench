@@ -6,22 +6,23 @@ import json
 import re
 from tqdm import tqdm
 os.system('clear')
-from utils.retrieval_model_util import CLIPRetriever, SigLIPRetriever, NVEmbedMultiRetriever, NVEmbedRetriever
+from utils.retrieval_model_util import CLIPRetriever, SigLIPRetriever, NVEmbedRetriever
 from utils.retrieval_model_util import SentenceBERTRetriever, BGE_M3Retriever, BGE_LargeRetriever, BM25Retriever
-from utils.retrieval_model_util import ColPhiRetriever, ColInternVL2Retriever, ColPaliRetriever, VLM2VecRetriever, GmeRetriever, VisRAGRetriever
+from utils.retrieval_model_util import ColPhiRetriever, ColInternVL2Retriever, ColPaliRetriever, VLM2VecRetriever, GmeRetriever, VisRAGRetriever, ColQwenRetriever
 import argparse
 from print_result import compute_top_k_accuracy
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--retriever", default='BM25', 
                     choices=['CLIP', 'SigLIP', 'BM25', 'SBERT', 'bge_large', 'BGE_M3', 
                              'VLM2vec', 'VisRAG', 'NV-Embed',
-                             'ColPali', 'ColPhi', 'ColInternVL2', 'GEM'], 
+                             'ColPali', 'ColPhi', 'ColInternVL2', 'GME', 'ColQwen'], 
                     help="retriever name", 
                     type=str)
 parser.add_argument("--type", default='multilingual', choices=['figure', 'table', 'text', 'multilingual'], help="QA type", type=str)
 parser.add_argument("--work_dir", default='./', help="/path/to/code/folder", type=str)
+parser.add_argument("--start", type=int, help="start")
+parser.add_argument("--end", type=int, help="end")
 args = parser.parse_args()
 
 
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         retriever = BGE_M3Retriever()
     elif args.retriever == 'bge_large':
         retriever = BGE_LargeRetriever()
-    elif args.retriever == 'GEM':
+    elif args.retriever == 'GME':
         retriever = GmeRetriever()
     elif args.retriever == 'VLM2vec':
         retriever = VLM2VecRetriever()
@@ -51,6 +52,8 @@ if __name__ == "__main__":
         retriever = VisRAGRetriever()
     elif args.retriever == 'ColPali':
         retriever = ColPaliRetriever()
+    elif args.retriever == 'ColQwen':
+        retriever = ColQwenRetriever()
     elif args.retriever == 'ColPhi':
         model_checkpoint = 'puar-playground/Col-Phi-3-V'
         retriever = ColPhiRetriever(model_name=model_checkpoint)
@@ -63,7 +66,10 @@ if __name__ == "__main__":
     top_k = 1
 
     acc_all = []
-    pbar = tqdm(qa_data)
+
+    start = args.start
+    end = min(args.end, len(qa_data))
+    pbar = tqdm(qa_data[start:end])
 
     results = []
     for qa in pbar:
@@ -74,7 +80,11 @@ if __name__ == "__main__":
 
         assert len(qa['all_page_images']) == len(qa['all_page_md_str'])
 
-        image_list = [os.path.join(args.work_dir, 'VisR-Bench', file_name, x) for x in qa['all_page_images']]
+        # image_list = [os.path.join(args.work_dir, 'VisR-Bench', f'{args.type}', file_name, x) for x in qa['all_page_images']]
+        if args.type == 'multilingual':
+            image_list = [os.path.join(args.work_dir, 'VisR-Bench', 'Multilingual', file_name, x) for x in qa['all_page_images']]
+        else:
+            image_list = [os.path.join(args.work_dir, 'VisR-Bench', 'Multimodal', file_name, x) for x in qa['all_page_images']]
 
         if retriever.multimodel:
             _, indicies = retriever.retrieve(query_list=question_list, image_list=image_list)
@@ -88,8 +98,6 @@ if __name__ == "__main__":
         qa['indicies'] = indicies
         results.append(qa.copy())
 
-        # break
-
-    json.dump(results, open(os.path.join(args.work_dir, f'results/{args.retriever}_{args.type}.json'), 'w'), indent=2)
+        json.dump(results, open(os.path.join(args.work_dir, f'results/{args.retriever}_{args.type}_{start}.json'), 'w'), indent=2)
 
     acc = compute_top_k_accuracy(results, k_list=[1, 5])
