@@ -29,7 +29,7 @@ python run_test.py --retriever ColPali --type figure --work_dir .
 
 The `retriever` flag determine a retriever model from 
 ```
-['CLIP', 'SigLIP', 'BM25', 'SBERT', 'bge_large', 'BGE_M3', 'VLM2vec', 'VisRAG', 'NV-Embed', 'ColPali', 'ColPhi', 'ColInternVL2', 'GEM'], 
+['CLIP', 'SigLIP', 'BM25', 'SBERT', 'bge_large', 'BGE_M3', 'VLM2vec', 'VisRAG', 'NV-Embed', 'ColPali', 'ColPhi', 'ColInternVL2', 'GME', 'ColQwen2'], 
 ```
 The `type` flag determine the type of QA in
 ```
