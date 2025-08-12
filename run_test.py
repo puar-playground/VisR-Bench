@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--retriever", default='BM25', 
                     choices=['CLIP', 'SigLIP', 'BM25', 'SBERT', 'bge_large', 'BGE_M3', 
                              'VLM2vec', 'VisRAG', 'NV-Embed',
-                             'ColPali', 'ColPhi', 'ColInternVL2', 'GME', 'ColQwen'], 
+                             'ColPali', 'ColPhi', 'ColInternVL2', 'GME', 'ColQwen2'], 
                     help="retriever name", 
                     type=str)
 parser.add_argument("--type", default='multilingual', choices=['figure', 'table', 'text', 'multilingual'], help="QA type", type=str)
@@ -50,8 +50,8 @@ if __name__ == "__main__":
         retriever = VisRAGRetriever()
     elif args.retriever == 'ColPali':
         retriever = ColPaliRetriever()
-    elif args.retriever == 'ColQwen':
-        retriever = ColQwenRetriever()
+    elif args.retriever == 'ColQwen2':
+        retriever = ColQwen2Retriever()
     elif args.retriever == 'ColPhi':
         model_checkpoint = 'puar-playground/Col-Phi-3-V'
         retriever = ColPhiRetriever(model_name=model_checkpoint)
