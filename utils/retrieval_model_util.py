@@ -179,7 +179,7 @@ class ColPaliRetriever(BaseRetriever):
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-class ColQwenRetriever(BaseRetriever):
+class ColQwen2Retriever(BaseRetriever):
     """Retriever class using ColQwen2 for multimodal retrieval."""
 
     def __init__(self, model_name: str = "vidore/colqwen2-v0.1", device: str = "cuda" if torch.cuda.is_available() else "cpu"):
