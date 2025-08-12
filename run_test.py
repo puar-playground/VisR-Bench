@@ -8,7 +8,7 @@ from tqdm import tqdm
 os.system('clear')
 from utils.retrieval_model_util import CLIPRetriever, SigLIPRetriever, NVEmbedRetriever
 from utils.retrieval_model_util import SentenceBERTRetriever, BGE_M3Retriever, BGE_LargeRetriever, BM25Retriever
-from utils.retrieval_model_util import ColPhiRetriever, ColInternVL2Retriever, ColPaliRetriever, VLM2VecRetriever, GmeRetriever, VisRAGRetriever, ColQwenRetriever
+from utils.retrieval_model_util import ColPhiRetriever, ColInternVL2Retriever, ColPaliRetriever, VLM2VecRetriever, GmeRetriever, VisRAGRetriever, ColQwen2Retriever
 import argparse
 from print_result import compute_top_k_accuracy
 
